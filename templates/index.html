@@ -1,0 +1,220 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary bg-gradient">
+                <h2 class="card-title mb-0 text-white">
+                    <i class="fas fa-vial me-2"></i>
+                    Alcohol & Phenol Reaction Predictor
+                </h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Predict the products of common reactions involving alcohols and phenols.
+                    Enter your compound, select a catalyst and reaction type, and see the results!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card shadow h-100">
+            <div class="card-header bg-secondary bg-gradient">
+                <h3 class="card-title mb-0 text-white">
+                    <i class="fas fa-edit me-2"></i>
+                    Input Parameters
+                </h3>
+            </div>
+            <div class="card-body">
+                <form id="reaction-form">
+                    <div class="mb-3">
+                        <label for="compound" class="form-label fw-bold">
+                            <i class="fas fa-atom me-2"></i>
+                            Alcohol/Phenol Compound
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="compound" name="compound" 
+                                placeholder="Enter a compound (e.g., ethanol, phenol)" required>
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Examples
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" id="alcohol-examples">
+                                <!-- JS will populate this -->
+                            </ul>
+                        </div>
+                        <div class="form-text">You can enter SMILES notation or common names</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reaction_type" class="form-label fw-bold">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            Reaction Type
+                        </label>
+                        <select class="form-select" id="reaction_type" name="reaction_type" required>
+                            <option value="" selected disabled>Select reaction type</option>
+                            <!-- JS will populate this -->
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="catalyst" class="form-label fw-bold">
+                            <i class="fas fa-filter me-2"></i>
+                            Catalyst/Reagent
+                        </label>
+                        <select class="form-select" id="catalyst" name="catalyst" required>
+                            <option value="" selected disabled>Select catalyst/reagent</option>
+                            <!-- JS will populate this -->
+                        </select>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-bolt me-2"></i>
+                            Predict Reaction
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow h-100">
+            <div class="card-header bg-info bg-gradient">
+                <h3 class="card-title mb-0 text-white">
+                    <i class="fas fa-flask me-2"></i>
+                    Reaction Results
+                </h3>
+            </div>
+            <div class="card-body">
+                <div id="loading" class="text-center d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Predicting reaction...</p>
+                </div>
+
+                <div id="error-message" class="alert alert-danger d-none" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="error-text"></span>
+                </div>
+
+                <div id="results-container" class="d-none">
+                    <div class="row mb-4">
+                        <div class="col-md-6 text-center">
+                            <h4 class="mb-3">Reactant</h4>
+                            <div class="structure-container p-2 border rounded mb-2">
+                                <div id="reactant-structure"></div>
+                            </div>
+                            <h5 id="reactant-name" class="badge bg-secondary fs-6 mb-0"></h5>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <h4 class="mb-3">Product</h4>
+                            <div class="structure-container p-2 border rounded mb-2">
+                                <div id="product-structure"></div>
+                            </div>
+                            <h5 id="product-name" class="badge bg-secondary fs-6 mb-0"></h5>
+                        </div>
+                    </div>
+
+                    <div class="reaction-details mt-4">
+                        <h4 class="border-bottom pb-2">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Reaction Details
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p>
+                                    <strong>Reaction Type:</strong> 
+                                    <span id="result-reaction-type" class="badge bg-primary"></span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>
+                                    <strong>Catalyst:</strong> 
+                                    <span id="result-catalyst" class="badge bg-info"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Mechanism Explanation</h5>
+                                    <p id="reaction-details" class="card-text"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="initial-message" class="text-center mt-5">
+                    <i class="fas fa-arrow-left fa-3x text-muted mb-3"></i>
+                    <p class="lead">Fill out the form to predict a reaction</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header bg-success bg-gradient">
+                <h3 class="card-title mb-0 text-white">
+                    <i class="fas fa-book me-2"></i>
+                    About Alcohol & Phenol Reactions
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Common Alcohol Reactions</h4>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Oxidation:</strong> Primary alcohols → aldehydes → carboxylic acids
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Oxidation:</strong> Secondary alcohols → ketones
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Dehydration:</strong> Alcohols → alkenes + water
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Halogenation:</strong> Alcohols + HX → alkyl halides + water
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Esterification:</strong> Alcohols + carboxylic acids → esters + water
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Phenol Reactivity</h4>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Electrophilic Substitution:</strong> Phenols undergo substitution at ortho/para positions
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Acidity:</strong> Phenols are more acidic than alcohols
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Oxidation:</strong> Complex reactions depending on oxidizing agent
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Esterification:</strong> Phenols + acid chlorides → phenyl esters
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Kolbe Reaction:</strong> Phenols + CO₂ → salicylic acids
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

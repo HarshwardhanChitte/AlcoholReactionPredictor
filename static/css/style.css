@@ -1,0 +1,64 @@
+/* Custom styling for the chemistry application */
+
+/* Structure container sizing and styling */
+.structure-container {
+    min-height: 200px;
+    background-color: var(--bs-dark-bg-subtle);
+    overflow: hidden;
+}
+
+/* SVG styling for molecular structures */
+.structure-container svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Styling for reaction arrow icons */
+.reaction-arrow {
+    font-size: 2.5rem;
+    color: var(--bs-primary);
+}
+
+/* Custom cards with better spacing */
+.card {
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.card-header {
+    font-weight: 500;
+}
+
+/* Add slightly rounded corners to improve look */
+.rounded-custom {
+    border-radius: 0.5rem;
+}
+
+/* Make dropdown menu items more accessible */
+.dropdown-item {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bs-primary-bg-subtle);
+}
+
+/* Footer styling */
+.footer {
+    background-color: var(--bs-dark-bg-subtle) !important;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+/* Improve badges */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+}
+
+/* Mobile responsiveness adjustments */
+@media (max-width: 767.98px) {
+    .structure-container {
+        min-height: 150px;
+    }
+}
