@@ -77,7 +77,13 @@ def get_mol_from_name(compound_name):
 
 def get_mol_svg(compound, width=300, height=200):
     """Generate SVG for a molecule"""
-    mol = get_mol_from_name(compound)
+    # Check if it's a SMILES string first
+    try:
+        mol = Chem.MolFromSmiles(compound)
+        if not mol:
+            mol = get_mol_from_name(compound)
+    except:
+        mol = get_mol_from_name(compound)
     
     if not mol:
         return f"<div class='text-danger'>Could not parse: {compound}</div>"
