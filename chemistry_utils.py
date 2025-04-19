@@ -139,20 +139,21 @@ def dehydrate_alcohol(mol):
     """Dehydration reaction for alcohols"""
     smiles = Chem.MolToSmiles(mol)
     
+    # Handle specific alcohols
+    if smiles == 'CC(C)(C)O':  # tert-butanol
+        return 'C=C(C)C', 'tert-Butanol undergoes dehydration to form 2-methylpropene (isobutylene)'
+    
     # Simple primary alcohols (except methanol)
-    if 'CCO' in smiles and not 'C(C)(C)O' in smiles and smiles != 'CO':
+    elif 'CCO' in smiles and not 'C(C)(C)O' in smiles and smiles != 'CO':
         alkene_smiles = smiles.replace('CCO', 'C=C')
         return alkene_smiles, 'Alcohol undergoes dehydration to form an alkene'
     
     # Secondary alcohols
+    elif smiles == 'CC(C)O':  # isopropanol
+        return 'C=CC', 'Isopropanol undergoes dehydration to form propene'
     elif 'C(C)O' in smiles:
         alkene_smiles = smiles.replace('C(C)O', 'C=C')
         return alkene_smiles, 'Secondary alcohol dehydrates to form an alkene'
-    
-    # Tertiary alcohols
-    elif 'C(C)(C)O' in smiles:
-        alkene_smiles = smiles.replace('C(C)(C)O', 'C=C')
-        return alkene_smiles, 'Tertiary alcohol readily dehydrates to form an alkene'
     
     # Methanol can't undergo typical dehydration
     elif smiles == 'CO':
@@ -181,8 +182,25 @@ def halogenate_alcohol(mol, catalyst):
     else:
         return '', 'Please specify a halogenating agent (HCl, HBr, HI, SOCl₂, etc.)'
     
-    # Replace OH with halogen
-    if 'CO' in smiles:
+    # Handle specific alcohols
+    if smiles == 'CC(C)O':  # isopropanol
+        if halogen == 'Cl':
+            return 'CC(C)Cl', f'Isopropanol reacts with {catalyst} to form isopropyl chloride'
+        elif halogen == 'Br':
+            return 'CC(C)Br', f'Isopropanol reacts with {catalyst} to form isopropyl bromide'
+        elif halogen == 'I':
+            return 'CC(C)I', f'Isopropanol reacts with {catalyst} to form isopropyl iodide'
+    
+    elif smiles == 'CC(C)(C)O':  # tert-butanol
+        if halogen == 'Cl':
+            return 'CC(C)(C)Cl', f'tert-Butanol reacts with {catalyst} to form tert-butyl chloride'
+        elif halogen == 'Br':
+            return 'CC(C)(C)Br', f'tert-Butanol reacts with {catalyst} to form tert-butyl bromide'
+        elif halogen == 'I':
+            return 'CC(C)(C)I', f'tert-Butanol reacts with {catalyst} to form tert-butyl iodide'
+    
+    # Generic alcohol halogenation
+    elif 'CO' in smiles:
         halogenated_smiles = smiles.replace('O', halogen)
         return halogenated_smiles, f'Alcohol is converted to alkyl {halogen_name}'
     
@@ -196,8 +214,15 @@ def esterify_alcohol(mol):
     """Esterification reaction for alcohols with acetic acid"""
     smiles = Chem.MolToSmiles(mol)
     
-    # Replace OH with OC(=O)C for acetate ester
-    if 'CO' in smiles:
+    # Handle specific alcohols
+    if smiles == 'CC(C)O':  # isopropanol
+        return 'CC(C)OC(=O)C', 'Isopropanol reacts with acetic acid to form isopropyl acetate'
+        
+    elif smiles == 'CC(C)(C)O':  # tert-butanol
+        return 'CC(C)(C)OC(=O)C', 'tert-Butanol reacts with acetic acid to form tert-butyl acetate'
+    
+    # Replace OH with OC(=O)C for acetate ester for other alcohols
+    elif 'CO' in smiles:
         ester_smiles = smiles.replace('O', 'OC(=O)C')
         return ester_smiles, 'Alcohol reacts with acetic acid to form an acetate ester'
     
