@@ -250,10 +250,12 @@ def predict_reaction(compound, catalyst, reaction_type):
                         'error': "Phenol oxidation requires a strong oxidizing agent like K₂Cr₂O₇ or KMnO₄"
                     }
             elif reaction_type == 'halogenation':
-                if catalyst.lower() in ['hcl', 'hbr', 'hi']:
+                if catalyst.lower() in ['hcl', 'hbr', 'hi', 'socl2']:
                     # Electrophilic aromatic substitution occurs at ortho/para positions
                     halogen = ''
-                    if catalyst.lower() == 'hcl':
+                    halogen_name = 'halophenol'  # Default value
+                    
+                    if catalyst.lower() == 'hcl' or catalyst.lower() == 'socl2':
                         halogen = 'Cl'
                         halogen_name = 'chlorophenol'
                     elif catalyst.lower() == 'hbr':
@@ -264,6 +266,7 @@ def predict_reaction(compound, catalyst, reaction_type):
                         halogen_name = 'iodophenol'
                     
                     # 2,4,6-trihalogenated phenol is typically the major product
+                    product_smiles = ''  # Default empty value
                     if halogen == 'Cl':
                         product_smiles = 'Oc1c(Cl)cc(Cl)cc1Cl'  # 2,4,6-trichlorophenol
                     elif halogen == 'Br':
@@ -271,11 +274,15 @@ def predict_reaction(compound, catalyst, reaction_type):
                     elif halogen == 'I':
                         product_smiles = 'Oc1c(I)cc(I)cc1I'  # 2,4,6-triiodophenol
                     
-                    details = f'Phenol undergoes halogenation to form multiple {halogen_name} products, with 2,4,6-tri{halogen_name} as the major product'
+                    reaction_details = ""
+                    if catalyst.lower() == 'socl2':
+                        reaction_details = "SOCl₂ acts as a chlorinating agent with phenol, primarily attacking the aromatic ring at ortho and para positions due to the activating effect of the hydroxyl group. "
+                    
+                    details = f'Phenol undergoes halogenation to form multiple {halogen_name} products, with 2,4,6-tri{halogen_name} as the major product. {reaction_details}'
                 else:
                     return {
                         'success': False,
-                        'error': "Phenol halogenation requires a halogen donor like HCl, HBr, or HI"
+                        'error': "Phenol halogenation requires a halogen donor like HCl, HBr, HI, or SOCl₂"
                     }
             elif reaction_type == 'esterification':
                 if catalyst.lower() in ['h2so4', 'h3po4']:

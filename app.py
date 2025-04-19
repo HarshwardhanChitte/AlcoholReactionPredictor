@@ -39,7 +39,7 @@ def index():
 def predict():
     try:
         # Get form data
-        compound = request.form.get('compound', '')
+        compound = request.form.get('compound', '').strip().lower()
         catalyst = request.form.get('catalyst', '')
         reaction_type = request.form.get('reaction_type', '')
         save_to_db = request.form.get('save_to_db') == 'true'
@@ -49,7 +49,14 @@ def predict():
                 'success': False,
                 'error': 'Please enter a compound'
             })
-            
+        
+        # Use common alcohols lookup directly to avoid SMILES parsing errors
+        from chemistry_utils import COMMON_ALCOHOLS
+        if compound in COMMON_ALCOHOLS:
+            reactant_smiles = COMMON_ALCOHOLS[compound]
+        else:
+            reactant_smiles = compound  # Assume direct SMILES input
+        
         # Predict reaction
         result = predict_reaction(compound, catalyst, reaction_type)
         
@@ -57,7 +64,12 @@ def predict():
             return jsonify(result)
             
         # Get molecule visualizations
-        reactant_svg = get_mol_svg(compound)
+        # Use SMILES directly if available to avoid parsing errors
+        if compound in COMMON_ALCOHOLS:
+            reactant_svg = get_mol_svg(reactant_smiles)
+        else:
+            reactant_svg = get_mol_svg(compound)
+            
         product_svg = get_mol_svg(result['product']) if result['product'] else ''
         
         # Save to database if requested
@@ -65,9 +77,11 @@ def predict():
             try:
                 reaction = Reaction(
                     reactant=compound,
+                    reactant_smiles=reactant_smiles if compound in COMMON_ALCOHOLS else None,
                     catalyst=catalyst,
                     reaction_type=reaction_type,
                     product=result['product'],
+                    product_smiles=result['product'],
                     details=result['details']
                 )
                 db.session.add(reaction)
