@@ -31,19 +31,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Populate alcohol examples dropdown
     const alcoholExamples = document.getElementById('alcohol-examples');
-    commonAlcohols.forEach(alcohol => {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.classList.add('dropdown-item');
-        a.textContent = alcohol;
-        a.href = '#';
-        a.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('compound').value = alcohol;
+    if (alcoholExamples) { // Check if element exists before trying to populate it
+        commonAlcohols.forEach(alcohol => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.classList.add('dropdown-item');
+            a.textContent = alcohol;
+            a.href = '#';
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('compound').value = alcohol;
+            });
+            li.appendChild(a);
+            alcoholExamples.appendChild(li);
         });
-        li.appendChild(a);
-        alcoholExamples.appendChild(li);
-    });
+    }
     
     // Reaction types
     const reactionTypes = {

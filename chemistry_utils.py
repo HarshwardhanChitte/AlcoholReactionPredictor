@@ -207,62 +207,128 @@ def esterify_alcohol(mol):
 def predict_reaction(compound, catalyst, reaction_type):
     """Predict the products of alcohol/phenol reactions"""
     try:
-        mol = get_mol_from_name(compound)
-        
+        # Convert compound names to SMILES for RDKit processing
+        if compound.lower() in COMMON_ALCOHOLS:
+            smiles = COMMON_ALCOHOLS[compound.lower()]
+            mol = Chem.MolFromSmiles(smiles)
+        else:
+            # Try to interpret as SMILES directly
+            mol = Chem.MolFromSmiles(compound)
+            
         if not mol:
             return {
                 'success': False,
                 'error': f"Couldn't recognize or parse the compound: {compound}"
             }
         
-        # Check if the molecule contains an alcohol group
+        # Get canonical SMILES from the molecule for consistency
         smiles = Chem.MolToSmiles(mol)
+        
+        # Check if the molecule contains an alcohol group
         if 'O' not in smiles and 'OH' not in smiles:
             return {
                 'success': False,
                 'error': f"The compound doesn't appear to be an alcohol or phenol: {compound}"
             }
         
+        # Check if it's phenol
+        is_phenol = smiles == 'c1ccccc1O' or smiles == 'Oc1ccccc1'
+        
         # Different reaction pathways
         product_smiles = ''
         details = ''
         
-        if reaction_type == 'oxidation':
-            if catalyst.lower() in ['k2cr2o7', 'kmno4', 'pcc']:
-                product_smiles, details = oxidize_alcohol(mol)
-            else:
+        # Phenol-specific reactions
+        if is_phenol:
+            if reaction_type == 'oxidation':
+                if catalyst.lower() in ['k2cr2o7', 'kmno4']:
+                    product_smiles = 'O=C1C=CC(=O)C=C1'  # Benzoquinone
+                    details = 'Phenol undergoes oxidation to form benzoquinone under strong oxidizing conditions'
+                else:
+                    return {
+                        'success': False,
+                        'error': "Phenol oxidation requires a strong oxidizing agent like K₂Cr₂O₇ or KMnO₄"
+                    }
+            elif reaction_type == 'halogenation':
+                if catalyst.lower() in ['hcl', 'hbr', 'hi']:
+                    # Electrophilic aromatic substitution occurs at ortho/para positions
+                    halogen = ''
+                    if catalyst.lower() == 'hcl':
+                        halogen = 'Cl'
+                        halogen_name = 'chlorophenol'
+                    elif catalyst.lower() == 'hbr':
+                        halogen = 'Br'
+                        halogen_name = 'bromophenol'
+                    elif catalyst.lower() == 'hi':
+                        halogen = 'I'
+                        halogen_name = 'iodophenol'
+                    
+                    # 2,4,6-trihalogenated phenol is typically the major product
+                    if halogen == 'Cl':
+                        product_smiles = 'Oc1c(Cl)cc(Cl)cc1Cl'  # 2,4,6-trichlorophenol
+                    elif halogen == 'Br':
+                        product_smiles = 'Oc1c(Br)cc(Br)cc1Br'  # 2,4,6-tribromophenol
+                    elif halogen == 'I':
+                        product_smiles = 'Oc1c(I)cc(I)cc1I'  # 2,4,6-triiodophenol
+                    
+                    details = f'Phenol undergoes halogenation to form multiple {halogen_name} products, with 2,4,6-tri{halogen_name} as the major product'
+                else:
+                    return {
+                        'success': False,
+                        'error': "Phenol halogenation requires a halogen donor like HCl, HBr, or HI"
+                    }
+            elif reaction_type == 'esterification':
+                if catalyst.lower() in ['h2so4', 'h3po4']:
+                    product_smiles = 'CC(=O)Oc1ccccc1'  # Phenyl acetate
+                    details = 'Phenol reacts with acetic acid to form phenyl acetate in the presence of an acid catalyst'
+                else:
+                    return {
+                        'success': False,
+                        'error': "Phenol esterification requires an acid catalyst like H₂SO₄ or H₃PO₄"
+                    }
+            elif reaction_type == 'dehydration':
                 return {
                     'success': False,
-                    'error': "Oxidation typically requires an oxidizing agent like K₂Cr₂O₇, KMnO₄, or PCC"
+                    'error': "Phenol doesn't undergo typical dehydration reactions like aliphatic alcohols. The aromatic ring stabilizes the C-O bond."
                 }
+        else:
+            # Regular alcohol reactions
+            if reaction_type == 'oxidation':
+                if catalyst.lower() in ['k2cr2o7', 'kmno4', 'pcc']:
+                    product_smiles, details = oxidize_alcohol(mol)
+                else:
+                    return {
+                        'success': False,
+                        'error': "Oxidation typically requires an oxidizing agent like K₂Cr₂O₇, KMnO₄, or PCC"
+                    }
+                    
+            elif reaction_type == 'dehydration':
+                if catalyst.lower() in ['h2so4', 'h3po4', 'heat']:
+                    product_smiles, details = dehydrate_alcohol(mol)
+                else:
+                    return {
+                        'success': False,
+                        'error': "Dehydration typically requires an acid catalyst like H₂SO₄ or H₃PO₄, or heat"
+                    }
+                    
+            elif reaction_type == 'halogenation':
+                product_smiles, details = halogenate_alcohol(mol, catalyst)
                 
-        elif reaction_type == 'dehydration':
-            if catalyst.lower() in ['h2so4', 'h3po4', 'heat']:
-                product_smiles, details = dehydrate_alcohol(mol)
-            else:
-                return {
-                    'success': False,
-                    'error': "Dehydration typically requires an acid catalyst like H₂SO₄ or H₃PO₄, or heat"
-                }
-                
-        elif reaction_type == 'halogenation':
-            product_smiles, details = halogenate_alcohol(mol, catalyst)
+            elif reaction_type == 'esterification':
+                if catalyst.lower() in ['h2so4', 'h3po4']:
+                    product_smiles, details = esterify_alcohol(mol)
+                else:
+                    return {
+                        'success': False,
+                        'error': "Esterification typically requires an acid catalyst like H₂SO₄"
+                    }
             
-        elif reaction_type == 'esterification':
-            if catalyst.lower() in ['h2so4', 'h3po4']:
-                product_smiles, details = esterify_alcohol(mol)
             else:
                 return {
                     'success': False,
-                    'error': "Esterification typically requires an acid catalyst like H₂SO₄"
+                    'error': f"Reaction type '{reaction_type}' not supported yet"
                 }
         
-        else:
-            return {
-                'success': False,
-                'error': f"Reaction type '{reaction_type}' not supported yet"
-            }
-            
         if not product_smiles:
             return {
                 'success': False,
