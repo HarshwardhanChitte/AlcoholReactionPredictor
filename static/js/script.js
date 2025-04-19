@@ -52,7 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'oxidation': 'Oxidation',
         'dehydration': 'Dehydration',
         'halogenation': 'Halogenation',
-        'esterification': 'Esterification'
+        'esterification': 'Esterification',
+        'kolbe': 'Kolbe Reaction'
     };
     
     // Populate reaction type dropdown
@@ -76,7 +77,11 @@ document.addEventListener('DOMContentLoaded', function() {
         'hi': 'Hydroiodic Acid (HI)',
         'socl2': 'Thionyl Chloride (SOCl₂)',
         'heat': 'Heat',
-        'naoh': 'Sodium Hydroxide (NaOH)'
+        'naoh': 'Sodium Hydroxide (NaOH)',
+        'koh': 'Potassium Hydroxide (KOH)',
+        'co2': 'Carbon Dioxide (CO₂)',
+        'naco2': 'Sodium Carbonate (Na₂CO₃)',
+        'khco3': 'Potassium Bicarbonate (KHCO₃)'
     };
     
     // Populate catalyst dropdown
@@ -119,6 +124,12 @@ document.addEventListener('DOMContentLoaded', function() {
             relevantCatalysts = {
                 'h2so4': 'Sulfuric Acid (H₂SO₄)',
                 'h3po4': 'Phosphoric Acid (H₃PO₄)'
+            };
+        } else if (selectedReaction === 'kolbe') {
+            relevantCatalysts = {
+                'naoh': 'Sodium Hydroxide (NaOH)',
+                'koh': 'Potassium Hydroxide (KOH)',
+                'co2': 'Carbon Dioxide (CO₂)'
             };
         }
         

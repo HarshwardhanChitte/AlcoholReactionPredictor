@@ -41,7 +41,10 @@ CATALYSTS = {
     'hbr': 'Hydrobromic Acid (HBr)',
     'hi': 'Hydroiodic Acid (HI)',
     'heat': 'Heat',
-    'none': 'None'
+    'none': 'None',
+    'co2': 'Carbon Dioxide (CO₂)',
+    'naco2': 'Sodium Carbonate (Na₂CO₃)',
+    'khco3': 'Potassium Bicarbonate (KHCO₃)'
 }
 
 # Dictionary of reaction types
@@ -52,7 +55,8 @@ REACTION_TYPES = {
     'esterification': 'Esterification',
     'halogenation': 'Halogenation',
     'elimination': 'Elimination',
-    'substitution': 'Substitution'
+    'substitution': 'Substitution',
+    'kolbe': 'Kolbe Reaction'
 }
 
 def get_mol_from_name(compound_name):
@@ -298,6 +302,21 @@ def predict_reaction(compound, catalyst, reaction_type):
                     'success': False,
                     'error': "Phenol doesn't undergo typical dehydration reactions like aliphatic alcohols. The aromatic ring stabilizes the C-O bond."
                 }
+            elif reaction_type == 'kolbe':
+                if catalyst.lower() in ['naoh', 'koh', 'naco2', 'khco3', 'co2']:
+                    # Kolbe-Schmitt reaction (carboxylation of phenol)
+                    product_smiles = 'OC(=O)c1ccccc1O'  # Salicylic acid
+                    details = 'Phenol undergoes the Kolbe-Schmitt reaction with carbon dioxide under basic conditions to form salicylic acid (2-hydroxybenzoic acid). Elevated temperature and pressure are usually required. This reaction occurs primarily at the ortho position due to the directing effect of the hydroxyl group.'
+                    return {
+                        'success': True,
+                        'product': product_smiles,
+                        'details': details
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'error': "The Kolbe-Schmitt reaction requires basic conditions (NaOH, KOH) and carbon dioxide."
+                    }
         else:
             # Regular alcohol reactions
             if reaction_type == 'oxidation':
