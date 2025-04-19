@@ -6,6 +6,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsContainer = document.getElementById('results-container');
     const initialMessage = document.getElementById('initial-message');
     
+    // Save button elements
+    const saveButton = document.getElementById('save-reaction');
+    const saveSuccess = document.getElementById('save-success');
+    const saveError = document.getElementById('save-error');
+    const saveErrorText = document.getElementById('save-error-text');
+    
+    // Current reaction data
+    let currentReactionData = null;
+    
     // Common alcohols for the dropdown
     const commonAlcohols = [
         'methanol',
@@ -120,6 +129,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Save reaction to database
+    if (saveButton) {
+        saveButton.addEventListener('click', function() {
+            if (!currentReactionData) {
+                saveError.classList.remove('d-none');
+                saveErrorText.textContent = 'No reaction data to save.';
+                return;
+            }
+            
+            // Reset alerts
+            saveSuccess.classList.add('d-none');
+            saveError.classList.add('d-none');
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('compound', currentReactionData.reactant);
+            formData.append('catalyst', currentReactionData.catalyst);
+            formData.append('reaction_type', currentReactionData.reaction_type);
+            formData.append('save_to_db', 'true');
+            
+            // Send save request
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    saveSuccess.classList.remove('d-none');
+                    setTimeout(() => {
+                        saveSuccess.classList.add('d-none');
+                    }, 3000);
+                } else {
+                    saveError.classList.remove('d-none');
+                    saveErrorText.textContent = data.error || 'Failed to save reaction.';
+                }
+            })
+            .catch(error => {
+                saveError.classList.remove('d-none');
+                saveErrorText.textContent = 'Network error: ' + error.message;
+                console.error('Error saving reaction:', error);
+            });
+        });
+    }
+    
     // Form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -133,6 +187,10 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsContainer.classList.add('d-none');
         initialMessage.classList.add('d-none');
         
+        // Reset save alerts
+        if (saveSuccess) saveSuccess.classList.add('d-none');
+        if (saveError) saveError.classList.add('d-none');
+        
         // Send the request
         fetch('/predict', {
             method: 'POST',
@@ -144,6 +202,9 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingIndicator.classList.add('d-none');
             
             if (data.success) {
+                // Store current reaction data
+                currentReactionData = data;
+                
                 // Show results
                 resultsContainer.classList.remove('d-none');
                 

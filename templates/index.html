@@ -146,6 +146,20 @@
                                 <div class="card-body">
                                     <h5 class="card-title">Mechanism Explanation</h5>
                                     <p id="reaction-details" class="card-text"></p>
+                                    <div class="mt-3 text-end">
+                                        <button id="save-reaction" class="btn btn-success">
+                                            <i class="fas fa-save me-2"></i>
+                                            Save to History
+                                        </button>
+                                        <div id="save-success" class="alert alert-success mt-2 d-none">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            Reaction saved to history!
+                                        </div>
+                                        <div id="save-error" class="alert alert-danger mt-2 d-none">
+                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                            <span id="save-error-text"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

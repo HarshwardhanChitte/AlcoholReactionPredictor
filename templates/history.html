@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary bg-gradient">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="card-title mb-0 text-white">
+                        <i class="fas fa-history me-2"></i>
+                        Reaction History
+                    </h2>
+                    <a href="/" class="btn btn-light">
+                        <i class="fas fa-flask me-2"></i>
+                        Back to Predictor
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    View your previously saved reactions. The most recent reactions are shown first.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary bg-gradient">
+                <h3 class="card-title mb-0 text-white">
+                    <i class="fas fa-list me-2"></i>
+                    Past Reactions
+                </h3>
+            </div>
+            <div class="card-body">
+                <div id="loading-history" class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading reaction history...</p>
+                </div>
+                
+                <div id="history-error" class="alert alert-danger d-none" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="history-error-text"></span>
+                </div>
+                
+                <div id="history-container" class="d-none">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reactant</th>
+                                    <th>Catalyst</th>
+                                    <th>Reaction Type</th>
+                                    <th>Product</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="no-history" class="alert alert-info d-none" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No reaction history found. Try saving some reactions first!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadingIndicator = document.getElementById('loading-history');
+    const errorMessage = document.getElementById('history-error');
+    const errorText = document.getElementById('history-error-text');
+    const historyContainer = document.getElementById('history-container');
+    const historyTableBody = document.getElementById('history-table-body');
+    const noHistoryMessage = document.getElementById('no-history');
+    
+    // Reaction types mapping
+    const reactionTypes = {
+        'oxidation': 'Oxidation',
+        'dehydration': 'Dehydration',
+        'halogenation': 'Halogenation',
+        'esterification': 'Esterification'
+    };
+    
+    // Fetch reaction history
+    fetch('/history')
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading
+            loadingIndicator.classList.add('d-none');
+            
+            if (data.success) {
+                if (data.reactions && data.reactions.length > 0) {
+                    // Show history container
+                    historyContainer.classList.remove('d-none');
+                    
+                    // Populate table
+                    data.reactions.forEach(reaction => {
+                        const row = document.createElement('tr');
+                        
+                        // Format date
+                        const date = new Date(reaction.created_at);
+                        const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                        
+                        // Create table cells
+                        row.innerHTML = `
+                            <td>${formattedDate}</td>
+                            <td>${reaction.reactant}</td>
+                            <td>${reaction.catalyst}</td>
+                            <td>${reactionTypes[reaction.reaction_type] || reaction.reaction_type}</td>
+                            <td>${reaction.product || 'None'}</td>
+                            <td>${reaction.details || 'No details'}</td>
+                        `;
+                        
+                        historyTableBody.appendChild(row);
+                    });
+                } else {
+                    // Show no history message
+                    noHistoryMessage.classList.remove('d-none');
+                }
+            } else {
+                // Show error
+                errorMessage.classList.remove('d-none');
+                errorText.textContent = data.error || 'An unknown error occurred.';
+            }
+        })
+        .catch(error => {
+            // Hide loading
+            loadingIndicator.classList.add('d-none');
+            
+            // Show error
+            errorMessage.classList.remove('d-none');
+            errorText.textContent = 'Network error: ' + error.message;
+            console.error('Error:', error);
+        });
+});
+</script>
+{% endblock %}
