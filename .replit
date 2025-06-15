@@ -2,7 +2,7 @@ modules = ["python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cairo", "catch2", "comic-neue", "coordgenlibs", "eigen", "inchi", "maeparser", "openssl", "postgresql", "rapidjson", "expat"]
+packages = ["cairo", "catch2", "comic-neue", "coordgenlibs", "eigen", "expat", "inchi", "maeparser", "openssl", "postgresql", "rapidjson"]
 
 [deployment]
 deploymentTarget = "autoscale"
