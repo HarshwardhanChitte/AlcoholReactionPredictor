@@ -2,32 +2,37 @@ import os
 import logging
 from flask import Flask, render_template, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
+from werkzeug.middleware.proxy_fix import ProxyFix
 from chemistry_utils import predict_reaction, get_mol_svg, get_common_alcohols, get_catalysts, get_reaction_types
 from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Initialize Flask app
+class Base(DeclarativeBase):
+    pass
+
+db = SQLAlchemy(model_class=Base)
+
+# Create the app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "default-dev-secret")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
-# Configure database
+# Configure the database
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 
-# Initialize database
-db = SQLAlchemy(app)
+# Initialize the app with the extension
+db.init_app(app)
 
-# Import models after db is defined
-from models import Reaction
-
-# Create database tables
 with app.app_context():
+    # Make sure to import the models here or their tables won't be created
+    import models  # noqa: F401
     db.create_all()
 
 # Routes
@@ -75,6 +80,7 @@ def predict():
         # Save to database if requested
         if save_to_db:
             try:
+                from models import Reaction
                 reaction = Reaction(
                     reactant=compound,
                     reactant_smiles=reactant_smiles if compound in COMMON_ALCOHOLS else None,
@@ -111,6 +117,7 @@ def predict():
 @app.route('/history', methods=['GET'])
 def get_history():
     try:
+        from models import Reaction
         reactions = Reaction.query.order_by(Reaction.created_at.desc()).limit(50).all()
         return jsonify({
             'success': True,
