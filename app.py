@@ -30,10 +30,20 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize the app with the extension
 db.init_app(app)
 
-with app.app_context():
-    # Make sure to import the models here or their tables won't be created
-    import models  # noqa: F401
-    db.create_all()
+def create_tables():
+    """Create database tables if they don't exist"""
+    try:
+        with app.app_context():
+            # Make sure to import the models here or their tables won't be created
+            import models  # noqa: F401
+            db.create_all()
+            logging.info("Database tables created successfully")
+    except Exception as e:
+        logging.error(f"Error creating database tables: {e}")
+        # Don't fail the app startup if DB is temporarily unavailable
+
+# Initialize tables
+create_tables()
 
 # Routes
 @app.route('/')
@@ -95,6 +105,7 @@ def predict():
                 logging.info(f"Saved reaction to database: {reaction}")
             except Exception as db_error:
                 logging.error(f"Error saving to database: {str(db_error)}")
+                db.session.rollback()
         
         return jsonify({
             'success': True,
@@ -127,7 +138,7 @@ def get_history():
         logging.error(f"Error retrieving history: {str(e)}")
         return jsonify({
             'success': False,
-            'error': f'An error occurred: {str(e)}'
+            'error': 'Database temporarily unavailable. History feature will be restored shortly.'
         })
 
 @app.route('/history/view', methods=['GET'])
